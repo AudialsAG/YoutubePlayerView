@@ -91,7 +91,19 @@ enum YoutubePlayerUtils {
         
             window.onresize = function() {
                 player.setSize(window.innerWidth, window.innerHeight);
+        
+                logging('setSize called');
+        
+                setTimeout(function() {
+                    logging('setSize inside setTimeout called');
+                    player.setSize(window.innerWidth, window.innerHeight);
+                }, 1000);
             }
+        
+            function logging(msg) {
+                window.webkit.messageHandlers.logging.postMessage(msg)
+            }
+        
         </script>
         """
     }

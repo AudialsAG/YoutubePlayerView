@@ -88,7 +88,12 @@ public extension YoutubePlayerViewDelegate {
     func playerViewPreferredInitialLoadingView(_ playerView: YoutubePlayerView) -> UIView? { return nil }
 }
 
-open class YoutubePlayerView: UIView {
+open class YoutubePlayerView: UIView, WKScriptMessageHandler {
+    public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if let text = message.body as? String {
+        }
+    }
+    
     private var webView: WKWebView!
     fileprivate weak var loadingView: UIView?
     private var autoplay = false
@@ -99,8 +104,12 @@ open class YoutubePlayerView: UIView {
         let preferences = WKPreferences()
         preferences.javaScriptEnabled = true
         
+        let ucc = WKUserContentController.init()
+        ucc.add(self, name: "logging")
+        
         let webConfiguration = WKWebViewConfiguration()
         webConfiguration.preferences = preferences
+        webConfiguration.userContentController = ucc
         
         if #available(iOS 10.0, *) {
             webConfiguration.mediaTypesRequiringUserActionForPlayback = []
@@ -127,11 +136,16 @@ open class YoutubePlayerView: UIView {
         webView.scrollView.isScrollEnabled = false
         webView.scrollView.bounces = false
         webView.navigationDelegate = self
+        
+        let js = "var console = { log: function(msg){window.webkit.messageHandlers.logging.postMessage(msg) };"
+        webView.evaluateJavaScript(js, completionHandler: nil)
+        
         add(subview: webView)
     }
     
     private func add(subview: UIView) {
         addSubview(subview)
+        
         subview.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
